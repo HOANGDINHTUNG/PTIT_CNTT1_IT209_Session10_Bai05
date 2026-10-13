@@ -1,0 +1,7 @@
+# Bảo mật biến môi trường nhạy cảm
+.env
+
+# Dependencies & logs
+node_modules/
+npm-debug.log
+.DS_Store

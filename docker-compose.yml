@@ -1,0 +1,46 @@
+services:
+  database:
+    image: postgres:15-alpine
+    container_name: database-service
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - backend-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: .
+    container_name: backend-service
+    restart: unless-stopped
+    ports:
+      - "${HOST_PORT}:8080"
+    environment:
+      PORT: 8080
+      DB_HOST: database
+      DB_PORT: ${DB_PORT:-5432}
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - backend-net
+
+volumes:
+  pgdata:
+    name: pgdata-volume
+
+networks:
+  backend-net:
+    name: backend-network
+    driver: bridge
